@@ -13,6 +13,7 @@ datasource db {
   url      = "file:dev.sqlite"
 }
 
+
 model Session {
   id            String    @id
   shop          String
@@ -29,4 +30,11 @@ model Session {
   locale        String?
   collaborator  Boolean?  @default(false)
   emailVerified Boolean?  @default(false)
+}
+
+model Shop {
+  id                  String   @id
+  myShopifyDomain     String   @unique
+  name                String
+  contactEmail        String
 }

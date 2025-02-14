@@ -1,37 +1,28 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-client_id = "9866827d8b12658ad138455b908c336f"
-name = "test-beneficial-post-purchase"
-handle = "test-beneficial-post-purchase"
-application_url = "https://enterprises-brass-when-image.trycloudflare.com"
+client_id = "675e75fcafc0db939c1084d68588e5c4"
+name = "Auto-Discounter"
+handle = "auto-discounter"
+application_url = "https://anniversary-figure-promote-adds.trycloudflare.com"
 embedded = true
 
 [build]
 automatically_update_urls_on_dev = true
 dev_store_url = "germiny.myshopify.com"
-include_config_on_deploy = true
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "write_products"
+scopes = ""
 
 [auth]
 redirect_urls = [
-  "https://enterprises-brass-when-image.trycloudflare.com/auth/callback",
-  "https://enterprises-brass-when-image.trycloudflare.com/auth/shopify/callback",
-  "https://enterprises-brass-when-image.trycloudflare.com/api/auth/callback"
+  "https://anniversary-figure-promote-adds.trycloudflare.com/auth/callback",
+  "https://anniversary-figure-promote-adds.trycloudflare.com/auth/shopify/callback",
+  "https://anniversary-figure-promote-adds.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
-api_version = "2025-01"
-
-  [[webhooks.subscriptions]]
-  topics = [ "app/scopes_update" ]
-  uri = "/webhooks/app/scopes_update"
-
-  [[webhooks.subscriptions]]
-  topics = [ "app/uninstalled" ]
-  uri = "/webhooks/app/uninstalled"
+api_version = "2024-07"
 
 [pos]
 embedded = false
