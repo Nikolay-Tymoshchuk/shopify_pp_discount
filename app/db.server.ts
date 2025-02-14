@@ -1,9 +1,15 @@
 import { PrismaClient } from "@prisma/client";
 
-import { singleton } from "./singleton.server";
+declare global {
+  var prisma: PrismaClient;
+}
 
-// Hard-code a unique key, so we can look up the client when this module gets re-imported
-const prisma = singleton("prisma", () => new PrismaClient());
-prisma.$connect();
+if (process.env.NODE_ENV !== "production") {
+  if (!global.prisma) {
+    global.prisma = new PrismaClient();
+  }
+}
 
-export { prisma };
+const prisma: PrismaClient = global.prisma || new PrismaClient();
+
+export default prisma;

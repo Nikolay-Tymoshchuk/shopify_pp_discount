@@ -1,90 +1,69 @@
 {
-  "name": "shopify_pp_discount-bc29",
+  "name": "test-beneficial-post-purchase",
   "private": true,
-  "sideEffects": false,
-  "type": "module",
   "scripts": {
-    "build": "remix build",
-    "dev": "remix dev -c \"npm run dev:serve\"",
-    "dev:serve": "NODE_OPTIONS=\"--import ./mocks/index.js\" remix-serve ./build/index.js",
-    "format": "prettier --write .",
+    "build": "remix vite:build",
+    "dev": "shopify app dev",
+    "config:link": "shopify app config link",
+    "generate": "shopify app generate",
+    "deploy": "shopify app deploy",
+    "config:use": "shopify app config use",
+    "env": "shopify app env",
+    "start": "remix-serve ./build/server/index.js",
+    "docker-start": "npm run setup && npm run start",
+    "setup": "prisma generate && prisma migrate deploy",
     "lint": "eslint --cache --cache-location ./node_modules/.cache/eslint .",
-    "setup": "prisma generate && prisma migrate deploy && prisma db seed",
-    "start": "remix-serve ./build/index.js",
-    "start:mocks": "NODE_OPTIONS=\"--import ./mocks/index.js\" remix-serve ./build/index.js",
-    "test": "vitest",
-    "test:e2e:dev": "start-server-and-test dev http://localhost:3000 \"npx cypress open\"",
-    "pretest:e2e:run": "npm run build",
-    "test:e2e:run": "cross-env PORT=8811 start-server-and-test start:mocks http://localhost:8811 \"npx cypress run\"",
-    "typecheck": "tsc && tsc -p cypress",
-    "validate": "npm-run-all --parallel \"test -- --run\" lint typecheck test:e2e:run"
+    "shopify": "shopify",
+    "prisma": "prisma",
+    "graphql-codegen": "graphql-codegen",
+    "vite": "vite"
   },
-  "eslintIgnore": [
-    "/node_modules",
-    "/build",
-    "/public/build"
-  ],
+  "type": "module",
+  "engines": {
+    "node": "^18.20 || ^20.10 || >=21.0.0"
+  },
   "dependencies": {
-    "@prisma/client": "^5.22.0",
-    "@remix-run/css-bundle": "^2.15.3",
-    "@remix-run/node": "^2.15.3",
-    "@remix-run/react": "^2.15.3",
-    "@remix-run/serve": "^2.15.3",
-    "bcryptjs": "^2.4.3",
-    "isbot": "^5.1.17",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "tiny-invariant": "^1.3.3"
+    "@prisma/client": "^6.2.1",
+    "@remix-run/dev": "^2.15.0",
+    "@remix-run/fs-routes": "^2.15.0",
+    "@remix-run/node": "^2.15.0",
+    "@remix-run/react": "^2.15.0",
+    "@remix-run/serve": "^2.15.0",
+    "@shopify/app-bridge-react": "^4.1.6",
+    "@shopify/polaris": "^12.0.0",
+    "@shopify/shopify-app-remix": "^3.7.0",
+    "@shopify/shopify-app-session-storage-prisma": "^6.0.0",
+    "isbot": "^5.1.0",
+    "prisma": "^6.2.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "vite-tsconfig-paths": "^5.0.1"
   },
   "devDependencies": {
-    "@faker-js/faker": "^9.2.0",
-    "@remix-run/dev": "^2.15.3",
-    "@testing-library/cypress": "^10.0.2",
-    "@testing-library/jest-dom": "^6.6.3",
-    "@types/bcryptjs": "^2.4.6",
-    "@types/eslint": "^8.56.12",
-    "@types/node": "^22.9.3",
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1",
-    "@typescript-eslint/eslint-plugin": "^8.15.0",
-    "@typescript-eslint/parser": "^8.15.0",
-    "@vitejs/plugin-react": "^4.3.3",
-    "@vitest/coverage-v8": "^2.1.5",
-    "autoprefixer": "^10.4.20",
-    "cookie": "^1.0.2",
-    "cross-env": "^7.0.3",
-    "cypress": "^13.16.0",
-    "eslint": "^8.57.1",
-    "eslint-config-prettier": "^9.1.0",
-    "eslint-import-resolver-typescript": "^3.6.3",
-    "eslint-plugin-cypress": "^3.6.0",
-    "eslint-plugin-import": "^2.31.0",
-    "eslint-plugin-jest": "^28.9.0",
-    "eslint-plugin-jest-dom": "^5.5.0",
-    "eslint-plugin-jsx-a11y": "^6.10.2",
-    "eslint-plugin-markdown": "^5.1.0",
-    "eslint-plugin-react": "^7.37.2",
-    "eslint-plugin-react-hooks": "^5.0.0",
-    "eslint-plugin-testing-library": "^7.0.0",
-    "happy-dom": "^15.11.6",
-    "msw": "^2.6.6",
-    "npm-run-all2": "^7.0.1",
-    "postcss": "^8.4.49",
-    "prettier": "3.3.3",
-    "prettier-plugin-tailwindcss": "^0.6.9",
-    "prisma": "^5.22.0",
-    "start-server-and-test": "^2.0.8",
-    "tailwindcss": "^3.4.15",
-    "tsx": "^4.19.2",
-    "typescript": "^5.7.2",
-    "vite": "^5.4.11",
-    "vite-tsconfig-paths": "^5.1.3",
-    "vitest": "^2.1.5"
+    "@remix-run/eslint-config": "^2.15.0",
+    "@remix-run/route-config": "^2.15.0",
+    "@shopify/api-codegen-preset": "^1.1.1",
+    "@types/eslint": "^9.6.1",
+    "@types/node": "^22.2.0",
+    "@types/react": "^18.2.31",
+    "@types/react-dom": "^18.2.14",
+    "eslint": "^8.42.0",
+    "eslint-config-prettier": "^10.0.1",
+    "prettier": "^3.2.4",
+    "typescript": "^5.2.2",
+    "vite": "^5.1.3"
   },
-  "engines": {
-    "node": ">=18.0.0"
+  "workspaces": [
+    "extensions/*"
+  ],
+  "trustedDependencies": [
+    "@shopify/plugin-cloudflare"
+  ],
+  "resolutions": {
+    "@graphql-tools/url-loader": "8.0.16"
   },
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
-  }
+  "overrides": {
+    "@graphql-tools/url-loader": "8.0.16"
+  },
+  "author": "wonderw"
 }
