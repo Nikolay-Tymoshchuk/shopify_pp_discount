@@ -18,12 +18,14 @@ CREATE TABLE "Session" (
 );
 
 -- CreateTable
-CREATE TABLE "Shop" (
-    "id" TEXT NOT NULL PRIMARY KEY,
-    "myShopifyDomain" TEXT NOT NULL,
+CREATE TABLE "Funnel" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "name" TEXT NOT NULL,
-    "contactEmail" TEXT NOT NULL
+    "triggerId" TEXT NOT NULL,
+    "triggerName" TEXT NOT NULL,
+    "offerId" TEXT NOT NULL,
+    "offerName" TEXT NOT NULL,
+    "discount" INTEGER NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
-
--- CreateIndex
-CREATE UNIQUE INDEX "Shop_myShopifyDomain_key" ON "Shop"("myShopifyDomain");

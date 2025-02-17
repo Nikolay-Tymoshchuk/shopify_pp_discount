@@ -4,6 +4,7 @@ import { boundary } from "@shopify/shopify-app-remix/server";
 import { AppProvider } from "@shopify/shopify-app-remix/react";
 import { NavMenu } from "@shopify/app-bridge-react";
 import polarisStyles from "@shopify/polaris/build/esm/styles.css?url";
+import dictionary from "~/dictionary/en.json";
 
 import { authenticate } from "../shopify.server";
 
@@ -22,11 +23,11 @@ export default function App() {
     <AppProvider isEmbeddedApp apiKey={apiKey}>
       <NavMenu>
         <Link to="/app" rel="home">
-          Dashboard
+          {dictionary.dashboard}
         </Link>
-        <Link to="/app/support">Help & Support</Link>
-        <Link to="/app/billing">Billing</Link>
-        <Link to="/app/settings">Settings</Link>
+        <Link to="/app/support">{dictionary.helpAndSupport}</Link>
+        <Link to="/app/billing">{dictionary.billing}</Link>
+        <Link to="/app/settings">{dictionary.settings}</Link>
       </NavMenu>
       <Outlet />
     </AppProvider>

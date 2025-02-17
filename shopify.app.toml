@@ -3,7 +3,7 @@
 client_id = "675e75fcafc0db939c1084d68588e5c4"
 name = "Auto-Discounter"
 handle = "auto-discounter"
-application_url = "https://anniversary-figure-promote-adds.trycloudflare.com"
+application_url = "https://reaching-thorough-paradise-deutsch.trycloudflare.com"
 embedded = true
 
 [build]
@@ -16,9 +16,9 @@ scopes = ""
 
 [auth]
 redirect_urls = [
-  "https://anniversary-figure-promote-adds.trycloudflare.com/auth/callback",
-  "https://anniversary-figure-promote-adds.trycloudflare.com/auth/shopify/callback",
-  "https://anniversary-figure-promote-adds.trycloudflare.com/api/auth/callback"
+  "https://reaching-thorough-paradise-deutsch.trycloudflare.com/auth/callback",
+  "https://reaching-thorough-paradise-deutsch.trycloudflare.com/auth/shopify/callback",
+  "https://reaching-thorough-paradise-deutsch.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

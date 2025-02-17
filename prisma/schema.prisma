@@ -32,9 +32,25 @@ model Session {
   emailVerified Boolean?  @default(false)
 }
 
-model Shop {
-  id                  String   @id
-  myShopifyDomain     String   @unique
-  name                String
-  contactEmail        String
+model Funnel {
+ id            Int        @id @default(autoincrement())
+ name          String
+ shop          String
+ triggerId     String
+ triggerName   String
+ offerId       String
+ offerName     String
+ discount      Float      @default(0)
+ createdAt     DateTime   @default(now())
+ updatedAt     DateTime   @default(now()) @updatedAt
+}
+
+model Statistic {
+  id            Int       @id @default(autoincrement())
+  shop          String
+  totalRevenue  Float
+  totalDiscount Float
+  totalOrders   Int
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }
