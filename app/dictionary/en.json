@@ -1,12 +1,16 @@
 {
+  "actions": "Actions",
   "billing": "Billing",
   "createFunnel": "Create a new funnel",
   "createFunnelPageTitle": "Create funnel to start discount program",
   "dashboard": "Dashboard",
   "dashboardTooltip": "Analytics and statistics of your sales",
+  "funnelName": "Funnel Name",
+  "funnelNameDescription": "Enter the name of the funnel",
   "funnels": "Funnels",
   "funnelsTooltip": "Create and manage your sales funnels",
   "helpAndSupport": "Help & Support",
+  "name": "Name",
   "settings": "Settings",
   "startByClicking": "You can start by clicking the button below."
 }

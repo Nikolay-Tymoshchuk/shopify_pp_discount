@@ -32,14 +32,22 @@ model Session {
   emailVerified Boolean?  @default(false)
 }
 
+model Shop {
+  id           Int        @id @default(autoincrement())
+  domain       String     @unique
+  name         String
+  contactEmail String
+  funnels      Funnel[]
+  statistic    Statistic?
+}
+
 model Funnel {
  id            Int        @id @default(autoincrement())
  name          String
- shop          String
+ shopId        Int
+ shop          Shop       @relation(fields: [shopId], references: [id], onDelete: Cascade)
  triggerId     String
- triggerName   String
  offerId       String
- offerName     String
  discount      Float      @default(0)
  createdAt     DateTime   @default(now())
  updatedAt     DateTime   @default(now()) @updatedAt
@@ -47,10 +55,13 @@ model Funnel {
 
 model Statistic {
   id            Int       @id @default(autoincrement())
-  shop          String
+  shopId        Int       @unique
+  shop          Shop      @relation(fields: [shopId], references: [id], onDelete: Cascade)
   totalRevenue  Float
   totalDiscount Float
   totalOrders   Int
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
+
+

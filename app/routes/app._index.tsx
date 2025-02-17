@@ -1,31 +1,16 @@
+import { dashboardLoader } from "@/app/actions/dashboardActions";
 import { InfoCard } from "@/app/components/InfoCard";
 import { InfoTooltip } from "@/app/components/InfoTooltip";
 import { PageLayout } from "@/app/components/PageLayout";
-import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
-import { useFetcher } from "@remix-run/react";
-import { useAppBridge } from "@shopify/app-bridge-react";
-import {
-  ActionList,
-  BlockStack,
-  Box,
-  Card,
-  Divider,
-  Grid,
-  InlineGrid,
-  Layout,
-  Page,
-  Popover,
-  Text,
-} from "@shopify/polaris";
-import { useEffect } from "react";
+import type { ActionFunctionArgs } from "@remix-run/node";
+import { useFetcher, useLoaderData } from "@remix-run/react";
+import { ActionList, Button, InlineGrid, Popover } from "@shopify/polaris";
+import { DeleteIcon, EditIcon } from "@shopify/polaris-icons";
+import type { FC } from "react";
 import dictionary from "~/dictionary/en.json";
 import { authenticate } from "../shopify.server";
 
-export const loader = async ({ request }: LoaderFunctionArgs) => {
-  await authenticate.admin(request);
-
-  return null;
-};
+export { dashboardLoader as loader };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const { admin } = await authenticate.admin(request);
@@ -98,21 +83,16 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
 export default function Index() {
   const fetcher = useFetcher<typeof action>();
+  const { funnels, total, page, limit, stats } =
+    useLoaderData<typeof dashboardLoader>();
 
-  const shopify = useAppBridge();
-  const isLoading =
-    ["loading", "submitting"].includes(fetcher.state) &&
-    fetcher.formMethod === "POST";
-  const productId = fetcher.data?.product?.id.replace(
-    "gid://shopify/Product/",
-    "",
-  );
-
-  useEffect(() => {
-    if (productId) {
-      shopify.toast.show("Product created");
-    }
-  }, [productId, shopify]);
+  // const isLoading =
+  //   ["loading", "submitting"].includes(fetcher.state) &&
+  //   fetcher.formMethod === "POST";
+  // const productId = fetcher.data?.product?.id.replace(
+  //   "gid://shopify/Product/",
+  //   "",
+  // );
 
   return (
     <>
@@ -146,86 +126,6 @@ export default function Index() {
   );
 }
 
-const Analytic: FC<StatisticData> = ({
-  totalRevenue,
-  totalDiscount,
-  totalOrders,
-}) => {
-  return (
-    <Page
-      title="Dashboard"
-      titleMetadata={
-        <InfoTooltip content="Here you can view your store's performance" />
-      }
-    >
-      <BlockStack gap="800">
-        <Divider borderColor="border" borderWidth="025" />
-        <Layout>
-          <Layout.Section>
-            <Grid columns={{ xs: 1, sm: 2, md: 2, lg: 3, xl: 3 }}>
-              <Grid.Cell>
-                <Card roundedAbove="sm">
-                  <Text as="h2" fontWeight="medium" variant="headingSm">
-                    Total Revenue
-                  </Text>
-
-                  <Box paddingBlockStart="200">
-                    <Text as="p" variant="bodyLg" fontWeight="bold">
-                      {totalRevenue ? `$${totalRevenue.toFixed(2)}` : 0}
-                    </Text>
-                  </Box>
-                </Card>
-              </Grid.Cell>
-              <Grid.Cell>
-                <Card roundedAbove="sm">
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                    }}
-                  >
-                    <Text as="h2" fontWeight="medium" variant="headingSm">
-                      Total Discounts
-                    </Text>
-                    <InfoTooltip content={"Total discounts applied"} />
-                  </div>
-
-                  <Box paddingBlockStart="200">
-                    <Text as="p" variant="bodyLg" fontWeight="bold">
-                      {totalDiscount ? `$${totalDiscount.toFixed(2)}` : 0}
-                    </Text>
-                  </Box>
-                </Card>
-              </Grid.Cell>
-              <Grid.Cell>
-                <Card roundedAbove="sm">
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                    }}
-                  >
-                    <Text as="h2" fontWeight="medium" variant="headingSm">
-                      Order Count
-                    </Text>
-                    <InfoTooltip content={"Total number of orders"} />
-                  </div>
-
-                  <Box paddingBlockStart="200">
-                    <Text as="p" variant="bodyLg" fontWeight="bold">
-                      {totalOrders}
-                    </Text>
-                  </Box>
-                </Card>
-              </Grid.Cell>
-            </Grid>
-          </Layout.Section>
-        </Layout>
-      </BlockStack>
-    </Page>
-  );
-};
-
 const Activator: FC<ActivatorProps> = ({ toggleActive, isExpanded }) => {
   return (
     <div
@@ -240,7 +140,7 @@ const Activator: FC<ActivatorProps> = ({ toggleActive, isExpanded }) => {
         variant="plain"
         disclosure={isExpanded ? "up" : "down"}
       >
-        Actions
+        {dictionary.actions}
       </Button>
     </div>
   );

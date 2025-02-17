@@ -7,6 +7,7 @@ import {
 } from "@shopify/shopify-app-remix/server";
 import { PrismaSessionStorage } from "@shopify/shopify-app-session-storage-prisma";
 import prisma from "./db.server";
+import { shopService } from "@/app/services/shopService.server";
 
 const shopify = shopifyApp({
   apiKey: process.env.SHOPIFY_API_KEY,
@@ -24,8 +25,14 @@ const shopify = shopifyApp({
     },
   },
   hooks: {
-    afterAuth: async ({ session }) => {
+    afterAuth: async ({ session, admin }) => {
       shopify.registerWebhooks({ session });
+      try {
+        console.log("start creating shop :>> ", admin);
+        await shopService.updateShop(admin);
+      } catch (error) {
+        console.error("error", error);
+      }
     },
   },
   future: {
