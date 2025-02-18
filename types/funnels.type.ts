@@ -1,15 +1,3 @@
-// model Funnel {
-//  id            Int        @id @default(autoincrement())
-//  name          String
-//  shop          String
-//  triggerId     String
-//  triggerName   String
-//  offerId       String
-//  offerName     String
-//  discount      Float      @default(0)
-//  createdAt     DateTime   @default(now())
-//  updatedAt     DateTime   @default(now()) @updatedAt
-
 import type { Funnel } from "@prisma/client";
 
 export enum FunnelActions {
@@ -32,7 +20,7 @@ export type CreateFunnelData = Pick<
 >;
 
 export interface FunnerCreateActionProps {
-  shopId: number;
+  shopId: string;
   formData: FormData;
   errors: FunnelActionValidationErrors;
 }

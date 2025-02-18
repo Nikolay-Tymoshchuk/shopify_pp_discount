@@ -26,18 +26,21 @@ const shopify = shopifyApp({
   },
   hooks: {
     afterAuth: async ({ session, admin }) => {
-      shopify.registerWebhooks({ session });
+      console.log(
+        "afterAuth admin=>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> :>> ",
+        admin,
+      );
       try {
-        console.log("start creating shop :>> ", admin);
+        await shopify.registerWebhooks({ session });
         await shopService.updateShop(admin);
       } catch (error) {
-        console.error("error", error);
+        console.error("Error in afterAuth hook", error);
       }
     },
   },
   future: {
     unstable_newEmbeddedAuthStrategy: true,
-    removeRest: true,
+    // removeRest: true,
   },
   ...(process.env.SHOP_CUSTOM_DOMAIN
     ? { customShopDomains: [process.env.SHOP_CUSTOM_DOMAIN] }

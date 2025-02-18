@@ -69,7 +69,7 @@ class FunnelService {
     page = 1,
     limit = 5,
   }: {
-    shopId: number;
+    shopId: string;
     graphql: Function;
     page: number;
     limit: number;
@@ -80,10 +80,12 @@ class FunnelService {
 
     const currentPage = this.calculateCurrentPage(page, limit, total);
 
+    const skip = Math.max((currentPage - 1) * limit, 0);
+
     const funnels = await prisma.funnel.findMany({
       where: { shopId },
       orderBy: { updatedAt: "desc" },
-      skip: (currentPage - 1) * limit,
+      skip,
       take: limit,
     });
 
@@ -99,7 +101,7 @@ class FunnelService {
     };
   }
 
-  async deleteFunnel(funnelId: number, shopId: number) {
+  async deleteFunnel(funnelId: number, shopId: string) {
     await prisma.funnel.delete({ where: { id: funnelId, shopId } });
   }
 
@@ -168,6 +170,7 @@ class FunnelService {
   }
 
   calculateCurrentPage(page: number, limit: number, total: number): number {
+    if (total === 0) return 1;
     return page * limit > total ? Math.ceil(total / limit) : page;
   }
 }

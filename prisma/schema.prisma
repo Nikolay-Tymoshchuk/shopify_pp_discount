@@ -33,7 +33,7 @@ model Session {
 }
 
 model Shop {
-  id           Int        @id @default(autoincrement())
+  id           String     @id
   domain       String     @unique
   name         String
   contactEmail String
@@ -44,7 +44,7 @@ model Shop {
 model Funnel {
  id            Int        @id @default(autoincrement())
  name          String
- shopId        Int
+ shopId        String
  shop          Shop       @relation(fields: [shopId], references: [id], onDelete: Cascade)
  triggerId     String
  offerId       String
@@ -55,7 +55,7 @@ model Funnel {
 
 model Statistic {
   id            Int       @id @default(autoincrement())
-  shopId        Int       @unique
+  shopId        String    @unique
   shop          Shop      @relation(fields: [shopId], references: [id], onDelete: Cascade)
   totalRevenue  Float
   totalDiscount Float

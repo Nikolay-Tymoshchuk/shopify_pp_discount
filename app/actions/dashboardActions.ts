@@ -14,7 +14,6 @@ export const dashboardLoader = async ({ request }: LoaderFunctionArgs) => {
     } = await authenticate.admin(request);
 
     const shop = await shopService.findShopByDomain(session.shop);
-    console.log("shop :>> ", shop);
     if (!shop) {
       return Response.json({
         status: 404,

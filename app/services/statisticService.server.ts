@@ -3,7 +3,7 @@ import type { Statistic } from "@prisma/client";
 import prisma from "~/db.server";
 
 class StatisticService {
-  async getTotalStats({ shopId }: { shopId: number }): Promise<StatisticData> {
+  async getTotalStats({ shopId }: { shopId: string }): Promise<StatisticData> {
     const response = await prisma.statistic.findMany({
       where: { shopId },
     });
