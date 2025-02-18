@@ -12,5 +12,20 @@
   "helpAndSupport": "Help & Support",
   "name": "Name",
   "settings": "Settings",
-  "startByClicking": "You can start by clicking the button below."
+  "startByClicking": "You can start by clicking the button below.",
+  "trigger": "Trigger",
+  "triggerDescription": "Choose trigger product",
+  "offer": "Offer",
+  "offerDescription": "Choose offer product",
+  "discount": "Discount",
+  "discountDescription": "Choose discount percentage",
+  "selectProduct": "Select",
+  "removeProduct": "Remove",
+  "pleaseSelect": "Please select",
+  "selectYourDiscount": "Select your discount",
+  "save": "Save",
+  "createNewFunnel": "Create new funnel",
+  "cancel": "Cancel",
+  "editFunnel": "Edit Funnel",
+  "createFunnelTitle": "Create Funnel"
 }

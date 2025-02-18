@@ -2,9 +2,10 @@ import { funnelService } from "@/app/services/funnelService.server";
 import { shopService } from "@/app/services/shopService.server";
 import { authenticate } from "@/app/shopify.server";
 import type { LoaderReturnType } from "@/types/common.type";
-import {
-  FunnelActions,
-  type FunnelActionValidationErrors,
+import { FunnelActions } from "@/types/funnels.type";
+import type {
+  FunnelActionValidationErrors,
+  FunnelExtendedByProducts,
 } from "@/types/funnels.type";
 import type { Funnel } from "@prisma/client";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
@@ -12,9 +13,31 @@ import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 export const funnelLoader = async ({
   request,
   params,
-}: LoaderFunctionArgs): LoaderReturnType<{ funnel: Funnel | null }> => {
+}: LoaderFunctionArgs): LoaderReturnType<{
+  funnel: FunnelExtendedByProducts;
+  triggeredIds: (string | void)[];
+}> => {
+  const emptyFunnel = {
+    name: "",
+    triggerId: "",
+    triggerName: "",
+    offerId: "",
+    offerName: "",
+    discount: 0,
+  };
+
   try {
-    const { redirect } = await authenticate.admin(request);
+    const {
+      redirect,
+      admin: { graphql },
+    } = await authenticate.admin(request);
+
+    /**
+     * Get a list of all id products that are target in the Funnels List.
+     * This is necessary to ensure that when creating or editing a Funnel, these products do not appear in the target list.
+     * This way we avoid situations where one product can be targeted in several funnels at the same time
+     */
+    const triggeredIds = await funnelService.getAllFunnelsTriggerProductsIds();
 
     /**
      * Get funnel information
@@ -23,31 +46,35 @@ export const funnelLoader = async ({
     if (params.id === "new") {
       return Response.json({
         status: 200,
-        data: { funnel: null },
+        data: { funnel: emptyFunnel, triggeredIds },
         error: null,
       });
     } else if (params.id && !isNaN(parseInt(params.id))) {
       const funnel = await funnelService.getFunnel({
         funnelId: parseInt(params.id),
+        graphql,
       });
+
+      console.log("funnel from loader :>> ", funnel);
 
       return funnel
         ? Response.json({
             status: 200,
             data: {
               funnel,
+              triggeredIds,
             },
             error: null,
           })
-        : redirect("/app/funnels/new");
+        : redirect("/app/settings/new");
     } else {
-      return redirect("/app/funnels/new");
+      return redirect("/app/settings/new");
     }
   } catch (error) {
     return Response.json({
       status: 500,
       error: `${error}`,
-      data: { funnel: null },
+      data: { funnel: emptyFunnel, triggeredIds: [] },
     });
   }
 };
@@ -70,7 +97,7 @@ export async function funnelAction({ request, params }: ActionFunctionArgs) {
    */
   const formData = await request.formData();
 
-  let newFunnel: Funnel | null = null;
+  let newFunnel: Funnel | null | undefined = null;
 
   const action = formData.get("action");
   switch (action) {
@@ -85,7 +112,7 @@ export async function funnelAction({ request, params }: ActionFunctionArgs) {
       if (!params.id || isNaN(parseInt(params.id))) {
         return redirect("/app/campaigns/new");
       }
-      await funnelService.updateFunnel({
+      newFunnel = await funnelService.updateFunnel({
         shopId: shop.id,
         funnelId: parseInt(params.id),
         formData,
@@ -99,6 +126,8 @@ export async function funnelAction({ request, params }: ActionFunctionArgs) {
   if (Object.keys(errors).length) {
     return Response.json({ status: 400, errors });
   }
+
+  console.log("success ===================:>> ", newFunnel?.id);
 
   return redirect(
     newFunnel ? `/app/settings/${newFunnel.id}` : "/app/settings/new",

@@ -20,3 +20,16 @@ export interface InfoCardProps {
 }
 
 export type InfoCardType = FC<InfoCardProps>;
+
+export interface ProductCardProps {
+  label: string;
+  description: string;
+  productId: string;
+  productName: string;
+  onSelect: VoidFunction;
+  onClear: VoidFunction;
+  error?: string;
+  id: string;
+}
+
+export type ProductCardType = FC<ProductCardProps>;

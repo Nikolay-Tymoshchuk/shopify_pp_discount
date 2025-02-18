@@ -9,30 +9,27 @@ import Joi from "joi";
 import prisma from "~/db.server";
 
 class FunnelService {
-  async getFunnel({ funnelId }: { funnelId: number }): Promise<Funnel | null> {
+  async getFunnel({
+    funnelId,
+    graphql,
+  }: {
+    funnelId: number;
+    graphql: Function;
+  }): Promise<Funnel | null> {
     const result = await prisma.funnel.findUnique({
-      where: {
-        id: funnelId,
-      },
+      where: { id: funnelId },
     });
-    return result;
+    return result ? this.supplementFunnel(result, graphql) : null;
   }
 
   async createFunnel({ shopId, formData, errors }: FunnerCreateActionProps) {
     const data = this.prepareFunnelData(formData);
+    console.log("prepareFunnelData============> :>> ", data);
+    if (!this.validateAndHandleErrors(data, errors)) return null;
 
-    if (!this.validateAndHandleErrors(data, errors)) {
-      return null;
-    }
-
-    const newFunnel = await prisma.funnel.create({
-      data: {
-        ...data,
-        shop: { connect: { id: shopId } },
-      },
+    return await prisma.funnel.create({
+      data: { ...data, shop: { connect: { id: shopId } } },
     });
-
-    return newFunnel;
   }
 
   async updateFunnel({
@@ -42,10 +39,7 @@ class FunnelService {
     errors,
   }: FunnelUpdateActionProps) {
     const data = this.prepareFunnelData(formData);
-
-    if (!this.validateAndHandleErrors(data, errors)) {
-      return;
-    }
+    if (!this.validateAndHandleErrors(data, errors)) return;
 
     const existingFunnel = await prisma.funnel.findUnique({
       where: { id: funnelId, shopId },
@@ -55,12 +49,10 @@ class FunnelService {
       return;
     }
 
-    const result = await prisma.funnel.update({
+    return await prisma.funnel.update({
       where: { id: funnelId },
       data,
     });
-
-    return result;
   }
 
   async getFunnelList({
@@ -74,12 +66,8 @@ class FunnelService {
     page: number;
     limit: number;
   }) {
-    const total = await prisma.funnel.count({
-      where: { shopId },
-    });
-
+    const total = await prisma.funnel.count({ where: { shopId } });
     const currentPage = this.calculateCurrentPage(page, limit, total);
-
     const skip = Math.max((currentPage - 1) * limit, 0);
 
     const funnels = await prisma.funnel.findMany({
@@ -93,12 +81,7 @@ class FunnelService {
       funnels.map((funnel) => this.supplementFunnel(funnel, graphql)),
     );
 
-    return {
-      data,
-      total,
-      page: currentPage,
-      limit,
-    };
+    return { data, total, page: currentPage, limit };
   }
 
   async deleteFunnel(funnelId: number, shopId: string) {
@@ -170,8 +153,14 @@ class FunnelService {
   }
 
   calculateCurrentPage(page: number, limit: number, total: number): number {
-    if (total === 0) return 1;
-    return page * limit > total ? Math.ceil(total / limit) : page;
+    return total === 0 ? 1 : Math.min(page, Math.ceil(total / limit));
+  }
+
+  async getAllFunnelsTriggerProductsIds() {
+    const funnels = await prisma.funnel.findMany({
+      select: { triggerId: true },
+    });
+    return funnels.map((funnel) => funnel.triggerId.split("/").pop());
   }
 }
 

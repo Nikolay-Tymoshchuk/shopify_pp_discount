@@ -1,43 +1,110 @@
-import { funnelLoader } from "@/app/actions/funnelActions";
-import { useActionData, useLoaderData } from "@remix-run/react";
-import dictionary from "~/dictionary/en.json";
+import { funnelAction, funnelLoader } from "@/app/actions/funnelActions";
+import { ProductCard } from "@/app/components/ProductCard";
+import { FunnelActions } from "@/types/funnels.type";
+import {
+  useActionData,
+  useLoaderData,
+  useNavigate,
+  useNavigation,
+  useSubmit,
+} from "@remix-run/react";
 import {
   BlockStack,
-  Button,
   Card,
   Divider,
   FormLayout,
   Grid,
-  InlineError,
   Layout,
   Page,
   PageActions,
   Text,
   TextField,
-  Thumbnail,
 } from "@shopify/polaris";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import dictionary from "~/dictionary/en.json";
 
-export { funnelLoader as loader };
+export { funnelAction as action, funnelLoader as loader };
 
 const FunnelPage = () => {
-  const {
-    data: { funnel },
-  } = useLoaderData<typeof funnelLoader>();
+  const loaderData = useLoaderData<typeof funnelLoader>();
+  const [formState, setFormState] = useState(loaderData.data.funnel);
+  const [cleanFormState, setCleanFormState] = useState(loaderData.data.funnel);
+  const isDirty = JSON.stringify(formState) !== JSON.stringify(cleanFormState);
+  const errors = useActionData<typeof funnelAction>()?.errors || {};
 
-  const [funnelName, setFunnelName] = useState(funnel?.name || "");
-  const [discountValue, setDiscountValue] = useState(
-    funnel?.discount.toString() || "",
-  );
+  useEffect(() => {
+    const { funnel } = loaderData.data;
+    setFormState(funnel);
+    setCleanFormState(funnel);
+  }, [loaderData]);
 
-  const handleTitleChange = (newValue: string) => setFunnelName(newValue);
+  const handleInputChange = (field: string, value: any) => {
+    setFormState((prevState) => ({ ...prevState, [field]: value }));
+  };
 
-  const handleDiscountChange = (newValue: string) => setDiscountValue(newValue);
+  const navigate = useNavigate();
+  const nav = useNavigation();
+  const isLoading = nav.state === "submitting";
 
-  const errors = useActionData<typeof action>()?.errors || {};
+  async function selectProduct(
+    idOfButton: "offer-product" | "trigger-product",
+  ) {
+    const isOfferProduct = idOfButton === "offer-product";
+    const products = await window.shopify.resourcePicker({
+      type: "product",
+      action: "select",
+      multiple: false,
+      filter: {
+        query: isOfferProduct
+          ? ""
+          : `NOT id:${loaderData.data.triggeredIds.join(" AND NOT id:")}`,
+      },
+    });
+
+    if (products) {
+      const { id, title } = products[0];
+      console.log("Selected Product ID:", id);
+      console.log("Selected Product Title:", title);
+      handleInputChange(isOfferProduct ? "offerId" : "triggerId", id);
+      handleInputChange(isOfferProduct ? "offerName" : "triggerName", title);
+    }
+  }
+
+  function clearProductData(id: "offer-product" | "trigger-product") {
+    const isOfferProduct = id === "offer-product";
+    handleInputChange(isOfferProduct ? "offerId" : "triggerId", "");
+    handleInputChange(isOfferProduct ? "offerName" : "triggerName", "");
+  }
+
+  const handleCancel = useCallback(() => {
+    setFormState(cleanFormState);
+  }, [cleanFormState]);
+
+  const submit = useSubmit();
+
+  function handleSave() {
+    const data = {
+      name: formState.name,
+      triggerId: formState.triggerId || "",
+      offerId: formState.offerId || "",
+      discount: formState.discount || 0,
+      action: formState.id
+        ? FunnelActions.UPDATE_FUNNEL
+        : FunnelActions.CREATE_FUNNEL,
+    };
+
+    setCleanFormState({ ...formState });
+    submit(data, { method: formState.id ? "put" : "post" });
+  }
 
   return (
-    <Page title={funnel?.id ? "Funnel Edit" : "Funnel Create"}>
+    <Page
+      title={
+        loaderData.data.funnel.id
+          ? dictionary.editFunnel
+          : dictionary.createFunnelTitle
+      }
+    >
       <Layout>
         <Layout.Section>
           <FormLayout>
@@ -53,7 +120,6 @@ const FunnelPage = () => {
                   xl: "40px",
                 }}
               >
-                {/* LABEL: NAME block */}
                 <Grid.Cell columnSpan={{ md: 2, lg: 2, xl: 2 }}>
                   <BlockStack gap="200">
                     <Text as="h2" fontWeight="medium" variant="headingLg">
@@ -68,205 +134,52 @@ const FunnelPage = () => {
                   <Card>
                     <TextField
                       label={dictionary.funnelName}
-                      value={funnelName}
-                      onChange={handleTitleChange}
+                      value={formState.name}
+                      onChange={(value) => handleInputChange("name", value)}
                       autoComplete="off"
                       error={errors.title}
                     />
                   </Card>
                 </Grid.Cell>
-                {/* LABEL: TRIGGER block */}
+                <ProductCard
+                  label="trigger"
+                  description="triggerDescription"
+                  productId={formState.triggerId}
+                  productName={formState.triggerName}
+                  onSelect={() => selectProduct("trigger-product")}
+                  id="trigger-product"
+                  onClear={() => clearProductData("trigger-product")}
+                  error={errors.triggerProductId}
+                />
+                <ProductCard
+                  label="offer"
+                  description="offerDescription"
+                  productId={formState.offerId}
+                  productName={formState.offerName}
+                  id="offer-product"
+                  onSelect={() => selectProduct("offer-product")}
+                  onClear={() => clearProductData("offer-product")}
+                  error={errors.offerProductId}
+                />
                 <Grid.Cell columnSpan={{ md: 2, lg: 2, xl: 2 }}>
                   <BlockStack gap="200">
                     <Text as="h2" fontWeight="medium" variant="headingLg">
-                      Trigger
+                      {dictionary.discount}
                     </Text>
                     <Text as="p" variant="bodyMd">
-                      Choose trigger product
-                    </Text>
-                  </BlockStack>
-                </Grid.Cell>
-                <Grid.Cell columnSpan={{ md: 3, lg: 3, xl: 3 }}>
-                  {formState.triggerProductId ? (
-                    <Card>
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "16px",
-                          }}
-                        >
-                          <Thumbnail
-                            source={formState.triggerProductImage || ImageIcon}
-                            alt={formState.triggerProductTitle}
-                            size="extraSmall"
-                          />
-                          <Text as="h3" variant="headingSm">
-                            {formState.triggerProductTitle}
-                          </Text>
-                        </div>
-                        <Button
-                          variant="primary"
-                          tone="critical"
-                          onClick={() =>
-                            clearProductData("clear-trigger-product")
-                          }
-                          id="clear-trigger-product"
-                          accessibilityLabel="Select Product"
-                        >
-                          Remove
-                        </Button>
-                      </div>
-                    </Card>
-                  ) : (
-                    <>
-                      <Card
-                        background={
-                          errors.triggerProductId
-                            ? "bg-fill-critical-secondary"
-                            : "bg-fill"
-                        }
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                          }}
-                        >
-                          <Text as="p">Please select trigger product</Text>
-                          <Button
-                            variant="primary"
-                            tone="success"
-                            onClick={() => selectProduct("trigger-product")}
-                            id="trigger-product"
-                            accessibilityLabel="Select Product"
-                          >
-                            Select
-                          </Button>
-                        </div>
-                      </Card>
-                      {errors.triggerProductId && (
-                        <InlineError
-                          message={errors.triggerProductId}
-                          fieldID="trigger-product"
-                        />
-                      )}
-                    </>
-                  )}
-                </Grid.Cell>
-                {/* LABEL: OFFER block */}
-                <Grid.Cell columnSpan={{ md: 2, lg: 2, xl: 2 }}>
-                  <BlockStack gap="200">
-                    <Text as="h2" fontWeight="medium" variant="headingLg">
-                      Offer
-                    </Text>
-                    <Text as="p" variant="bodyMd">
-                      Choose offer product
-                    </Text>
-                  </BlockStack>
-                </Grid.Cell>
-                <Grid.Cell columnSpan={{ md: 3, lg: 3, xl: 3 }}>
-                  {formState.offerProductId ? (
-                    <Card>
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "16px",
-                          }}
-                        >
-                          <Thumbnail
-                            source={formState.offerProductImage || ImageIcon}
-                            alt={formState.offerProductTitle}
-                            size="extraSmall"
-                          />
-                          <Text as="h3" variant="headingSm">
-                            {formState.offerProductTitle}
-                          </Text>
-                        </div>
-                        <Button
-                          variant="primary"
-                          tone="critical"
-                          onClick={() =>
-                            clearProductData("clear-offer-product")
-                          }
-                          id="clear-offer-product"
-                          accessibilityLabel="Select Product"
-                        >
-                          Remove
-                        </Button>
-                      </div>
-                    </Card>
-                  ) : (
-                    <>
-                      <Card
-                        background={
-                          errors.offerProductId
-                            ? "bg-fill-critical-secondary"
-                            : "bg-fill"
-                        }
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                          }}
-                        >
-                          <Text as="p">Please select your offered product</Text>
-                          <Button
-                            variant="primary"
-                            tone="success"
-                            onClick={() => selectProduct("offer-product")}
-                            id="offer-product"
-                            accessibilityLabel="Select Product"
-                          >
-                            Select
-                          </Button>
-                        </div>
-                      </Card>
-                      {errors.offerProductId && (
-                        <InlineError
-                          message={errors.offerProductId}
-                          fieldID="offer-product"
-                        />
-                      )}
-                    </>
-                  )}
-                </Grid.Cell>
-                {/* LABEL: DISCOUNT block */}
-                <Grid.Cell columnSpan={{ md: 2, lg: 2, xl: 2 }}>
-                  <BlockStack gap="200">
-                    <Text as="h2" fontWeight="medium" variant="headingLg">
-                      Discount
-                    </Text>
-                    <Text as="p" variant="bodyMd">
-                      Choose discount percentage
+                      {dictionary.discountDescription}
                     </Text>
                   </BlockStack>
                 </Grid.Cell>
                 <Grid.Cell columnSpan={{ md: 3, lg: 3, xl: 3 }}>
                   <Card>
                     <TextField
-                      label="Select your discount"
+                      label={dictionary.selectYourDiscount}
                       type="number"
-                      value={discountValue}
-                      onChange={handleDiscountChange}
+                      value={formState.discount.toString()}
+                      onChange={(value) =>
+                        handleInputChange("discount", Number(value))
+                      }
                       autoComplete="off"
                       min={0}
                       max={100}
@@ -284,22 +197,22 @@ const FunnelPage = () => {
         <Layout.Section>
           <PageActions
             primaryAction={{
-              content: "Save",
+              content: dictionary.save,
               loading: isLoading,
               disabled: !isDirty || isLoading,
               onAction: handleSave,
             }}
             secondaryActions={
-              funnel?.id
+              loaderData.data?.funnel?.id
                 ? [
                     {
-                      content: "Create new funnel",
+                      content: dictionary.createNewFunnel,
                       loading: isLoading,
                       disabled: isLoading,
                       onAction: () => navigate("/app/settings/new"),
                     },
                     {
-                      content: "Cancel",
+                      content: dictionary.cancel,
                       loading: isLoading,
                       disabled: !isDirty,
                       onAction: handleCancel,

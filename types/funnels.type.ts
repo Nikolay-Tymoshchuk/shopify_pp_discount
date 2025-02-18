@@ -28,3 +28,8 @@ export interface FunnerCreateActionProps {
 export interface FunnelUpdateActionProps extends FunnerCreateActionProps {
   funnelId: number;
 }
+
+export type FunnelExtendedByProducts = Funnel & {
+  triggerName: string;
+  offerName: string;
+};
