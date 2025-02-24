@@ -29,6 +29,11 @@ export interface FunnelUpdateActionProps extends FunnerCreateActionProps {
   funnelId: number;
 }
 
+export type DeleteFunnelActionProps = Pick<
+  FunnelUpdateActionProps,
+  "funnelId" | "shopId"
+>;
+
 export type FunnelExtendedByProducts = Funnel & {
   triggerName: string;
   offerName: string;

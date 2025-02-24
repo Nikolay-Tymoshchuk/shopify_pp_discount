@@ -26,10 +26,6 @@ const shopify = shopifyApp({
   },
   hooks: {
     afterAuth: async ({ session, admin }) => {
-      console.log(
-        "afterAuth admin=>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> :>> ",
-        admin,
-      );
       try {
         await shopify.registerWebhooks({ session });
         await shopService.updateShop(admin);
@@ -40,7 +36,6 @@ const shopify = shopifyApp({
   },
   future: {
     unstable_newEmbeddedAuthStrategy: true,
-    // removeRest: true,
   },
   ...(process.env.SHOP_CUSTOM_DOMAIN
     ? { customShopDomains: [process.env.SHOP_CUSTOM_DOMAIN] }

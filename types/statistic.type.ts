@@ -1,5 +1,6 @@
-export type StatisticData = {
-  totalOrders: number;
-  totalRevenue: number;
-  totalDiscount: number;
-};
+import type { Statistic } from "@prisma/client";
+
+export type StatisticData = Pick<
+  Statistic,
+  "totalDiscount" | "totalOrders" | "totalRevenue"
+>;

@@ -1,41 +1,60 @@
-import type { StatisticData } from "@/types/statistic.type";
-import type { Statistic } from "@prisma/client";
-import prisma from "~/db.server";
+import type { Statistic } from '@prisma/client';
+
+import type { StatisticData } from '@/types/statistic.type';
+
+import prisma from '~/db.server';
 
 class StatisticService {
-  async getTotalStats({ shopId }: { shopId: string }): Promise<StatisticData> {
-    const response = await prisma.statistic.findMany({
-      where: { shopId },
-    });
-
-    const emptyResponse = {
-      totalOrders: 0,
-      totalRevenue: 0,
-      totalDiscount: 0,
+    private emptyResponse: StatisticData = {
+        totalOrders: 0,
+        totalRevenue: 0,
+        totalDiscount: 0
     };
 
-    if (!response) {
-      return emptyResponse;
+    async getTotalStats({ shopId }: { shopId: string }): Promise<StatisticData> {
+        try {
+            const response = await prisma.statistic.findFirst({
+                where: { shopId }
+            });
+
+            if (!response) {
+                return this.emptyResponse;
+            }
+
+            return response;
+        } catch (error) {
+            console.error('Error fetching statistics:', error);
+            return this.emptyResponse;
+        }
     }
 
-    const result = response.reduce((acc, curr) => {
-      acc.totalOrders += 1;
-      acc.totalRevenue += curr.totalRevenue;
-      acc.totalDiscount += curr.totalDiscount;
-
-      return acc;
-    }, emptyResponse);
-
-    return result;
-  }
-
-  async addOneToStatistic(data: Statistic) {
-    const response = await prisma.statistic.create({
-      data,
-    });
-
-    return response;
-  }
+    async addOneToStatistic({
+        shopId,
+        data
+    }: {
+        shopId: string;
+        data: Partial<StatisticData>;
+    }): Promise<Statistic> {
+        try {
+            return await prisma.statistic.upsert({
+                where: { shopId },
+                update: {
+                    totalOrders: { increment: data.totalOrders || 0 },
+                    totalRevenue: { increment: data.totalRevenue || 0 },
+                    totalDiscount: { increment: data.totalDiscount || 0 }
+                },
+                create: {
+                    shopId,
+                    totalOrders: data.totalOrders || 0,
+                    totalRevenue: data.totalRevenue || 0,
+                    totalDiscount: data.totalDiscount || 0
+                }
+            });
+        } catch (error) {
+            console.error('Error updating statistics:', error);
+            throw new Error('Failed to update statistics');
+        }
+    }
 }
 
 export const statisticService = new StatisticService();

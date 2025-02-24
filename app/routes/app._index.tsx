@@ -1,199 +1,121 @@
-import { dashboardLoader } from "@/app/actions/dashboardActions";
-import { InfoCard } from "@/app/components/InfoCard";
-import { InfoTooltip } from "@/app/components/InfoTooltip";
-import { PageLayout } from "@/app/components/PageLayout";
-import type { ActionFunctionArgs } from "@remix-run/node";
-import { useFetcher, useLoaderData } from "@remix-run/react";
-import { ActionList, Button, InlineGrid, Popover } from "@shopify/polaris";
-import { DeleteIcon, EditIcon } from "@shopify/polaris-icons";
-import type { FC } from "react";
-import dictionary from "~/dictionary/en.json";
-import { authenticate } from "../shopify.server";
+import { type FC, useEffect, useState } from 'react';
 
-export { dashboardLoader as loader };
+import { useFetcher, useLoaderData, useNavigate } from '@remix-run/react';
 
-export const action = async ({ request }: ActionFunctionArgs) => {
-  const { admin } = await authenticate.admin(request);
-  const color = ["Red", "Orange", "Yellow", "Green"][
-    Math.floor(Math.random() * 4)
-  ];
-  const response = await admin.graphql(
-    `#graphql
-      mutation populateProduct($product: ProductCreateInput!) {
-        productCreate(product: $product) {
-          product {
-            id
-            title
-            handle
-            status
-            variants(first: 10) {
-              edges {
-                node {
-                  id
-                  price
-                  barcode
-                  createdAt
-                }
-              }
-            }
-          }
-        }
-      }`,
-    {
-      variables: {
-        product: {
-          title: `${color} Snowboard`,
-        },
-      },
-    },
-  );
-  const responseJson = await response.json();
+import { Box, Spinner, Text } from '@shopify/polaris';
 
-  const product = responseJson.data!.productCreate!.product!;
-  const variantId = product.variants.edges[0]!.node!.id!;
+import { dashboardAction, dashboardLoader } from '@/app/actions/dashboardActions';
+import { Analytic } from '@/app/components/Analytic';
+import { EmptyFunnelsState } from '@/app/components/EmptyFunnelState';
+import { FunnelDataTable } from '@/app/components/FunnelDataTable';
+import { InfoTooltip } from '@/app/components/InfoTooltip';
+import { PageLayout } from '@/app/components/PageLayout';
+import type { DeleteFunnelModalProps } from '@/types/components.type';
+import { FunnelActions, type FunnelExtendedByProducts } from '@/types/funnels.type';
 
-  const variantResponse = await admin.graphql(
-    `#graphql
-    mutation shopifyRemixTemplateUpdateVariant($productId: ID!, $variants: [ProductVariantsBulkInput!]!) {
-      productVariantsBulkUpdate(productId: $productId, variants: $variants) {
-        productVariants {
-          id
-          price
-          barcode
-          createdAt
-        }
-      }
-    }`,
-    {
-      variables: {
-        productId: product.id,
-        variants: [{ id: variantId, price: "100.00" }],
-      },
-    },
-  );
+import dictionary from '~/dictionary/en.json';
 
-  const variantResponseJson = await variantResponse.json();
-
-  return {
-    product: responseJson!.data!.productCreate!.product,
-    variant:
-      variantResponseJson!.data!.productVariantsBulkUpdate!.productVariants,
-  };
-};
+export { dashboardAction as action, dashboardLoader as loader };
 
 export default function Index() {
-  const fetcher = useFetcher<typeof action>();
-  const { funnels, total, page, limit, stats } =
-    useLoaderData<typeof dashboardLoader>();
+    const {
+        data: { funnels: rawFunnels, limit, page, stats, total }
+    } = useLoaderData<typeof dashboardLoader>();
 
-  // const isLoading =
-  //   ["loading", "submitting"].includes(fetcher.state) &&
-  //   fetcher.formMethod === "POST";
-  // const productId = fetcher.data?.product?.id.replace(
-  //   "gid://shopify/Product/",
-  //   "",
-  // );
+    const funnels = rawFunnels?.map((funnel: any) => ({
+        ...funnel,
+        createdAt: new Date(funnel.createdAt),
+        updatedAt: new Date(funnel.updatedAt)
+    }));
 
-  return (
-    <>
-      <PageLayout
-        title={dictionary.dashboard}
-        titleMetadata={<InfoTooltip content={dictionary.dashboardTooltip} />}
-      >
-        <InlineGrid
-          gap="400"
-          columns={{
-            xs: 1,
-            sm: 3,
-          }}
-        >
-          <InfoCard title="Product" content={`$${24}`} />
-          <InfoCard title="Product" content={`$${24}`} />
-          <InfoCard title="Product" content={`$${24}`} />
-        </InlineGrid>
-      </PageLayout>
-      <PageLayout
-        title={dictionary.funnels}
-        titleMetadata={<InfoTooltip content={dictionary.funnelsTooltip} />}
-        secondaryActions={[
-          {
-            content: dictionary.createFunnel,
-            url: "settings/new",
-          },
-        ]}
-      ></PageLayout>
-    </>
-  );
+    const navigate = useNavigate();
+
+    const [activeId, setActiveId] = useState<number>(-1);
+
+    return (
+        <>
+            {funnels?.length ? (
+                <>
+                    {stats && <Analytic {...stats} />}
+                    <PageLayout
+                        title={dictionary.funnels}
+                        titleMetadata={<InfoTooltip content={dictionary.funnelsTooltip} />}
+                        secondaryActions={[
+                            {
+                                content: dictionary.createFunnel,
+                                url: 'funnels/new'
+                            }
+                        ]}>
+                        <FunnelDataTable
+                            page={page}
+                            activeId={activeId}
+                            setActiveId={setActiveId}
+                            funnels={funnels}
+                            limit={limit}
+                            total={total}
+                        />
+                    </PageLayout>
+                    <Modal funnels={funnels} activeId={activeId} />
+                </>
+            ) : (
+                <EmptyFunnelsState onAction={() => navigate('funnels/new')} />
+            )}
+        </>
+    );
 }
 
-const Activator: FC<ActivatorProps> = ({ toggleActive, isExpanded }) => {
-  return (
-    <div
-      style={{
-        maxWidth: "fit-content",
-        marginLeft: "auto",
-        marginRight: "auto",
-      }}
-    >
-      <Button
-        onClick={toggleActive}
-        variant="plain"
-        disclosure={isExpanded ? "up" : "down"}
-      >
-        {dictionary.actions}
-      </Button>
-    </div>
-  );
-};
+const Modal: FC<DeleteFunnelModalProps> = ({ funnels, activeId }) => {
+    const fetcher = useFetcher<typeof dashboardAction>();
 
-const Drop: FC<DropdownProps> = ({ id, activeId, toggleActive, navigate }) => {
-  const isExpanded = activeId === id;
+    /**
+     * Listen for the success of the deletion of the funnel.
+     * If the deletion was successful, close the modal.
+     */
+    useEffect(() => {
+        if (fetcher?.data?.status === 200) {
+            const modalElement = document.getElementById('delete-funnel-modal') as UIModalElement;
+            if (modalElement) {
+                modalElement.hide();
+            }
+        }
+    }, [fetcher.data]);
 
-  return (
-    <Popover
-      active={isExpanded}
-      activator={
-        <Activator
-          isExpanded={isExpanded}
-          toggleActive={() => toggleActive(id)}
-        />
-      }
-      autofocusTarget="first-node"
-      onClose={() => toggleActive(id)}
-      key={id}
-      preferredAlignment="left"
-    >
-      <ActionList
-        actionRole="menuitem"
-        sections={[
-          {
-            title: "File options",
-            items: [
-              {
-                content: "Edit funnel",
-                icon: EditIcon,
-                onAction: () => {
-                  navigate(`settings/${id}`);
-                },
-              },
-              {
-                destructive: true,
-                content: "Delete funnel",
-                icon: DeleteIcon,
-                onAction: () => {
-                  const modalElement = document.getElementById(
-                    "modal",
-                  ) as UIModalElement;
-
-                  if (modalElement) {
-                    modalElement.show();
-                  }
-                },
-              },
-            ],
-          },
-        ]}
-      />
-    </Popover>
-  );
+    return (
+        <ui-modal id='delete-funnel-modal'>
+            <Box paddingBlock='1000' paddingInlineStart='400'>
+                {activeId && fetcher.state === 'idle' ? (
+                    <Text as='p' variant='bodyLg'>
+                        Are you sure you want to delete{' '}
+                        <b>{`${funnels?.find((funnel: FunnelExtendedByProducts) => funnel.id === activeId)?.name}`}</b>
+                    </Text>
+                ) : (
+                    <Spinner accessibilityLabel='Spinner example' size='small' />
+                )}
+            </Box>
+            <ui-title-bar title={'Delete funnel'}>
+                <button
+                    variant='primary'
+                    tone='critical'
+                    onClick={() => {
+                        fetcher.submit(
+                            { action: FunnelActions.DELETE_FUNNEL, id: activeId },
+                            { method: 'post' }
+                        );
+                    }}>
+                    Delete
+                </button>
+                <button
+                    onClick={() => {
+                        const modalElement = document.getElementById(
+                            'delete-funnel-modal'
+                        ) as UIModalElement;
+                        if (modalElement) {
+                            modalElement.hide();
+                        }
+                    }}>
+                    Cancel
+                </button>
+            </ui-title-bar>
+        </ui-modal>
+    );
 };

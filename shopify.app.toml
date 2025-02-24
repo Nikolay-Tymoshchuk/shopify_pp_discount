@@ -3,7 +3,7 @@
 client_id = "675e75fcafc0db939c1084d68588e5c4"
 name = "Post Purchase Discount"
 handle = "post-purchase-discount"
-application_url = "https://breach-planning-au-solution.trycloudflare.com"
+application_url = "https://common-officer-hit-tribes.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "read_products,write_products"
 
 [auth]
 redirect_urls = [
-  "https://breach-planning-au-solution.trycloudflare.com/auth/callback",
-  "https://breach-planning-au-solution.trycloudflare.com/auth/shopify/callback",
-  "https://breach-planning-au-solution.trycloudflare.com/api/auth/callback"
+  "https://common-officer-hit-tribes.trycloudflare.com/auth/callback",
+  "https://common-officer-hit-tribes.trycloudflare.com/auth/shopify/callback",
+  "https://common-officer-hit-tribes.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
